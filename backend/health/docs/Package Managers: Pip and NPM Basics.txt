@@ -1,0 +1,65 @@
+A package manager is the tool that finds those libraries, downloads the correct versions, and makes them available to your project. Understanding how package managers work is not optional — virtually every module that follows in this program will begin with installing dependencies. 
+What is a Package?
+A package (or library) is a named, versioned collection of code that someone else wrote and published. The "versioned" part matters: code changes over time. A project that works with version 1.4 of a library may break with version 2.0. This is why package managers track versions, and why careless version management is one of the most common causes of broken development environments.
+pip — Python's Package Manager
+pip is the standard package manager for Python. It downloads packages from the Python Package Index (PyPI) — a massive repository of open-source Python code.
+The commands you'll use constantly:
+pip install requests          # install a package
+pip install requests==2.31.0  # install a specific version
+pip uninstall requests        # remove a package
+pip list                      # see all installed packages
+pip show requests             # detailed info about one package
+pip freeze                    # list all packages with exact versions
+
+(On some systems, you'll need to use pip3 instead of pip.)
+requirements.txt — Sharing Dependencies
+When you clone a Python project from GitHub, how do you know what packages it needs? The answer is requirements.txt — a simple text file that lists every dependency and its version:
+requests==2.31.0
+pandas==2.1.4
+numpy==1.26.2
+
+To generate this file from your current environment:
+pip freeze > requirements.txt
+
+To install all dependencies from this file:
+pip install -r requirements.txt
+
+This single command installs every dependency the project needs at the correct versions. Conversely, when you share your own project, you generate this file so others can reproduce your environment exactly.
+
+Virtual Environments - Why and How
+Here's a problem: if every Python project on your machine shares the same installed packages, eventually two projects will need different versions of the same library. Project A needs pandas 1.5. Project B needs pandas 2.1. You can't have both installed globally at the same time.
+A virtual environment is an isolated Python environment for a single project. It has its own installed packages, its own version of pip, and changes to it don't affect any other project.
+This is not an advanced technique. It is the correct default way to work in Python.
+# Create a virtual environment
+python3 -m venv venv      # macOS/Linux
+python -m venv venv       # Windows (CMD and PowerShell)
+
+# Activate it
+source venv/bin/activate        # macOS/Linux (Terminal / bash / zsh)
+venv\Scripts\activate           # Windows CMD
+.\venv\Scripts\Activate.ps1     # Windows PowerShell
+
+# Your prompt now shows (venv) — you're inside the environment
+(venv) $ pip install requests   # installs only in this environment
+(venv) $ pip freeze > requirements.txt
+
+# Deactivate when done
+(venv) $ deactivate
+Windows note: On Windows, python3 is usually not recognised — use python instead. If PowerShell blocks the activation script with an execution-policy error, run Set-ExecutionPolicy -Scope CurrentUser RemoteSigned once and try again.
+
+The venv/ folder should never be committed to version control (Git). It's large and machine-specific. Instead, you share requirements.txt and let others recreate the environment from scratch.
+# .gitignore
+venv/
+__pycache__/
+*.pyc
+
+npm — A Brief Introduction
+You may also encounter npm (Node Package Manager) for JavaScript. The concepts are identical:
+npm install packagename — install a package
+npm install — install all dependencies from package.json (npm's equivalent of requirements.txt)
+npm list — see installed packages
+npx — run a package without installing it globally
+pip is to Python what npm is to JavaScript. Both install packages from a central registry. Both track dependencies in a project-level file. Once you understand one, the other takes minutes to learn.
+You don't need depth in npm this week. You need enough familiarity that it isn't foreign when it appears in later modules.
+
+

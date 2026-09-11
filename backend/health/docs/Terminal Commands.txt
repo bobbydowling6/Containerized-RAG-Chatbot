@@ -1,0 +1,179 @@
+Cluster 1: Where Am I and What's Here?
+pwd — Print Working Directory. Your current location in the file tree.
+pwd
+# /Users/maria/Documents
+
+ls — List. Shows the contents of the current directory.
+ls              # basic listing
+ls -a           # show hidden files (files starting with .)
+ls -l           # detailed view (permissions, size, date)
+ls -la          # both — the combination most developers use daily
+
+These are the first two commands to reach for when you open a terminal and feel disoriented. They answer the most fundamental question: where am I, and what's around me?
+
+Cluster 2: Moving Around
+cd — Change Directory. The workhorse of terminal navigation.
+cd foldername     # go into a folder
+cd ..             # go up one level
+cd ~              # go to your home directory
+cd /              # go to the root of the file system
+cd ~/Documents    # jump directly to Documents
+
+Pro tip: Tab completion. Start typing a folder name and press Tab. The terminal will auto-complete it. If there are multiple matches, press Tab twice to see them all. This saves keystrokes and catches typos immediately. Learning to use Tab completion is one of the first signs of becoming fluent.
+
+Cluster 3: Creating and Organizing
+mkdir — Make Directory. Creates a new folder.
+mkdir my-project              # create a folder
+mkdir -p projects/ai/module1  # create nested folders in one command
+                               # (-p creates parent directories as needed)
+
+touch — Creates an empty file (or updates the timestamp of an existing one).
+touch notes.txt          # create an empty file
+touch main.py config.py  # create multiple files at once
+
+When students start working on projects, a well-organized directory structure is not an aesthetic preference — it's a functional necessity. Creating that structure in the terminal is faster than clicking through a GUI.
+
+Cluster 4: Moving, Copying, and Renaming
+mv — Move. Moves a file or directory to a new location. Also serves as the rename command — renaming is just moving something to the same location with a different name.
+mv old_name.txt new_name.txt     # rename a file
+mv report.txt Documents/          # move to Documents folder
+mv file.txt ../                   # move up one directory
+
+cp — Copy. Copies a file.
+cp original.txt backup.txt        # copy to same directory with new name
+cp file.txt Documents/            # copy to Documents
+cp -r project/ project-backup/    # copy an entire directory
+                                   # (-r means "recursive" — copy everything inside)
+
+The -r flag is necessary for directories because a directory isn't a single thing — it's a tree. Copying it means copying everything inside it, recursively.
+
+Cluster 5: Reading and Deleting
+cat — Concatenate. Outputs the contents of a file directly to the terminal.
+cat notes.txt           # display the entire file
+cat config.py           # quick way to check a file's contents
+
+Useful for quickly reading small files without opening an editor.
+rm — Remove. Deletes a file.
+rm old_file.txt         # delete a file
+rm -r old_folder/       # delete a directory and everything inside it
+
+⚠️ Stop here and read this carefully: There is no recycle bin. There is no undo. rm permanently deletes files. rm -r permanently deletes directories and everything inside them. The terminal does exactly what you tell it to do, which means you must be precise about what you tell it.
+This isn't said to frighten you. It's said to build respect. The habit of reading commands before running them — especially destructive ones — starts now.
+
+Cluster 6: Searching
+grep — Searches for text inside files.
+grep "error" log.txt              # find lines containing "error"
+grep -r "TODO" project/           # search recursively through all files in project/
+grep -i "hello" file.txt          # case-insensitive search
+grep -n "import" main.py          # show line numbers
+
+grep is the command you'll reach for when you need to find every place a variable is used, every line that contains an error message, or any pattern inside a large file. It becomes essential once your projects grow beyond a few files.
+
+Let's build a complete project folder structure using only the terminal. Follow along step by step.
+
+Step 1: Navigate to a good starting location
+cd ~/Documents
+pwd
+# /Users/maria/Documents (or your equivalent)
+
+
+Step 2: Create the project structure
+mkdir -p terminal-practice/src
+mkdir -p terminal-practice/data
+mkdir -p terminal-practice/tests
+
+This creates:
+terminal-practice/
+├── src/
+├── data/
+└── tests/
+
+
+Step 3: Navigate into the project and create files
+cd terminal-practice
+touch README.md
+touch requirements.txt
+touch src/main.py
+touch src/utils.py
+touch tests/test_main.py
+touch data/sample.csv
+
+Verify:
+ls
+# README.md  data  requirements.txt  src  tests
+
+ls src/
+# main.py  utils.py
+
+ls -la
+# Shows all files including hidden ones, with details
+
+
+Step 4: Add content to files
+We can write content to files directly from the terminal:
+echo "# Terminal Practice Project" > README.md
+echo "requests==2.31.0" > requirements.txt
+echo "print('Hello from main!')" > src/main.py
+echo "name,age,city" > data/sample.csv
+echo "Alice,28,Denver" >> data/sample.csv
+echo "Bob,34,Austin" >> data/sample.csv
+
+Note the difference: > overwrites the file. >> appends to it.
+
+Step 5: Verify the contents
+cat README.md
+# # Terminal Practice Project
+
+cat data/sample.csv
+# name,age,city
+# Alice,28,Denver
+# Bob,34,Austin
+
+cat src/main.py
+# print('Hello from main!')
+
+
+Step 6: Reorganize — move, copy, rename
+# Rename utils.py to helpers.py
+mv src/utils.py src/helpers.py
+
+# Copy sample.csv as a backup
+cp data/sample.csv data/sample_backup.csv
+
+# Verify
+ls src/
+# helpers.py  main.py
+
+ls data/
+# sample.csv  sample_backup.csv
+
+
+Step 7: Search for content
+grep "Alice" data/sample.csv
+# Alice,28,Denver
+
+grep -r "print" src/
+# src/main.py:print('Hello from main!')
+
+
+Step 8: Clean up (carefully!)
+# Remove the backup file
+rm data/sample_backup.csv
+
+# Verify it's gone
+ls data/
+# sample.csv
+
+Remember: rm is permanent. Always double-check the path before pressing Enter.
+
+Final structure:
+terminal-practice/
+├── README.md
+├── requirements.txt
+├── src/
+│   ├── main.py
+│   └── helpers.py
+├── data/
+│   └── sample.csv
+└── tests/
+    └── test_main.py
