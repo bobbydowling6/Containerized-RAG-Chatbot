@@ -6,17 +6,22 @@ import dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
+from pydantic import BaseModel
 
 env_path = Path(__file__).parent.parent / ".env"
 dotenv.load_dotenv(env_path)
 
 from backend.health.config import settings
 from backend.health.rag import gemini
-# load .env before Settings reads env vars
 
 app = FastAPI(title="Terminal Command Instructor")
-app.add_middleware(CORSMiddleware, allow_origins=["*"],
-    allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 api_key = gemini.GEMINI_API_KEY
 if not api_key:
@@ -45,11 +50,10 @@ def load_documents_from_directory(directory: str):
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
             
-            # Split content into chunks (simple split by paragraphs)
             paragraphs = [p.strip() for p in content.split("\n\n") if p.strip()]
             
             for i, paragraph in enumerate(paragraphs):
-                if paragraph:  # Only add non-empty paragraphs
+                if paragraph:
                     doc_id = str(uuid.uuid4())
                     collection.add(
                         ids=[doc_id],
@@ -73,18 +77,16 @@ def health_check():
     gemini_ok = False
     doc_count = 0
     try:
-        # Test Gemini API connectivity by listing available models
         models_list = list(gemini_client.models.list())
         gemini_ok = len(models_list) > 0
         print(f"Gemini API connected, {len(models_list)} models available")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Gemini health check failed: {e}")
     
     try:
-        # Get document count from ChromaDB
         doc_count = collection.count()
         print(f"Document count: {doc_count}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"ChromaDB count failed: {e}")
         doc_count = 0
     
@@ -109,7 +111,6 @@ def get_stats():
 def ingest_documents():
     """Load and index documents from the docs directory"""
     try:
-        # Clear existing collection
         existing = collection.get()
         if existing and existing.get("ids"):
             collection.delete(existing["ids"])
@@ -117,7 +118,6 @@ def ingest_documents():
         else:
             print("Collection is empty, no documents to clear")
         
-        # Load documents from directory
         count = load_documents_from_directory(settings.DOCS_DIRECTORY)
         
         return {
@@ -130,56 +130,53 @@ def ingest_documents():
         print(f"Ingestion error: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+class AskRequest(BaseModel):
+    question: str
+
 @app.post("/ask")
-def ask_question(request: dict):
+def ask_question(body: AskRequest):
     """Ask a question and get an answer using RAG with Gemini"""
     try:
-        question = request.get("question", "")
+        question = body.question.strip()
         if not question:
             raise HTTPException(status_code=400, detail="Question is required")
-        
-        # Query ChromaDB for relevant documents
+            
         results = collection.query(
             query_texts=[question],
-            n_results=settings.MAX_RESULTS
+            n_results=gemini.MAX_RESULTS
         )
         
-        # Extract documents and prepare context
         sources = []
         context = ""
-        
-        if results and results["documents"] and len(results["documents"]) > 0:
+
+        if results and results.get("documents") and len(results["documents"]) > 0:
             for i, doc in enumerate(results["documents"][0]):
                 if doc:
-                    distance = results["distances"][0][i] if results["distances"] else 0
-                    metadata = results["metadatas"][0][i] if results["metadatas"] else {}
+                    distance = results["distances"][0][i] if results.get("distances") else 0
+                    metadata = results["metadatas"][0][i] if results.get("metadatas") else {}
                     
                     sources.append({
                         "source": metadata.get("source", "Unknown"),
                         "distance": float(distance),
-                        "text": doc[:100]  # Preview text
+                        "text": doc[:100]
                     })
                     context += f"\n\n{doc}"
-        
-        # Prepare prompt for Gemini
+                    
         system_prompt = f"""You are a helpful assistant that answers questions based on provided documents. 
-Answer the question based ONLY on the context provided below. 
-If the answer is not in the context, say 'I don't have information about that in the provided documents.'
+        Answer the question based ONLY on the context provided below. 
+        If the answer is not in the context, say 'I don't have information about that in the provided documents.'
 
-Context from documents:
-{context}
+        Context from documents:
+        {context}
 
-Question: {question}"""
-        
-        # Call Gemini API
+        Question: {question}"""
+            
         response = gemini_client.models.generate_content(
             model=MODEL,
             contents=system_prompt
         )
-        
+            
         answer = response.text if response else "No response from AI"
-        
-        # Determine confidence based on whether we found relevant documents
         confidence = "high" if sources else "low"
         
         return {
@@ -188,7 +185,7 @@ Question: {question}"""
             "sources": sources,
             "confidence": confidence
         }
-
+        
     except HTTPException:
         raise
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as e:
