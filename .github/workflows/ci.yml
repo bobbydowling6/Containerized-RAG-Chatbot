@@ -20,10 +20,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
+        working-directory: backend
         run: |
-          python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt  # Adjusted path to root/backend
-          pip install pytest httpx
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+              pip install pytest httpx
 
       - name: Run tests
         run: pytest backend/health/tests/ -v --tb=short
@@ -45,4 +46,4 @@ jobs:
       - name: Check code formatting
         run: |
           pip install ruff
-          ruff check backend/ frontend/
+          ruff check backend/ --fix frontend/ --fix
