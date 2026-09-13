@@ -86,7 +86,7 @@ def health_check():
     try:
         doc_count = collection.count()
         print(f"Document count: {doc_count}")
-    except Exception as e:
+    except Exception as  e:  # noqa: BLE001
         print(f"ChromaDB count failed: {e}")
         doc_count = 0
     
