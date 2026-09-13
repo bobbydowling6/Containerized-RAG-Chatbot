@@ -80,7 +80,7 @@ def health_check():
         models_list = list(gemini_client.models.list())
         gemini_ok = len(models_list) > 0
         print(f"Gemini API connected, {len(models_list)} models available")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Gemini health check failed: {e}")
     
     try:

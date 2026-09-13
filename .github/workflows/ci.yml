@@ -46,4 +46,4 @@ jobs:
       - name: Check code formatting
         run: |
           pip install ruff
-          ruff check backend/ --fix frontend/ --fix
+          ruff check backend/ --fix

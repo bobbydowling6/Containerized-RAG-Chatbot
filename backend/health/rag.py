@@ -1,5 +1,6 @@
 import os
 
+
 class Gemini:
 # API Configuration
     GEMINI_API_KEY: str = os.getenv("Gemini_API_Key")
