@@ -3,11 +3,10 @@ from pathlib import Path
 
 import chromadb
 import dotenv
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
-from pydantic import BaseModel, Field
-import os
+from pydantic import BaseModel
 
 env_path = Path(__file__).parent.parent / ".env"
 dotenv.load_dotenv(env_path)
