@@ -1,0 +1,10 @@
+Docker: The Shipping Container Analogy
+Before standardized shipping containers, goods were loaded onto ships in bags, barrels, crates, and loose piles. Every port had different equipment, different workers, different methods. Transferring cargo between ships, trains, and trucks was chaotic and error-prone.
+Then someone invented the standardized shipping container: a metal box with uniform dimensions. Now everything fits inside the same box, every crane lifts the same box, every truck carries the same box. It doesn’t matter what’s inside, the container is the standard.
+Docker does the same thing for software. Your application goes inside a container with everything it needs: the operating system, Python, all libraries, all configurations. The container runs identically on your laptop, your teammate’s laptop, a CI server, or a cloud deployment. The machine running the container doesn’t need Python installed, doesn’t need ChromaDB installed, doesn’t need anything except Docker.
+
+Key Concepts
+Dockerfile: A text file with step-by-step instructions for building an image. Think of it as a recipe.
+Image: A snapshot built from a Dockerfile. It contains your code, dependencies, and configuration, frozen at a point in time. Think of it as a class definition.
+Container: A running instance of an image. It has its own processes, network, and filesystem. Think of it as an object (instance of a class). You can run multiple containers from the same image.
+Registry: A storage service for images (like GitHub for code). Docker Hub is the default public registry. You push images to a registry and pull them to any machine.

@@ -62,7 +62,7 @@ Start the API from the **repo root** so `from backend...` imports resolve:
 
 ```bash
 source venv/bin/activate
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn backend.main:app --reload 
 ```
 
 In a second terminal, start Streamlit:
@@ -104,7 +104,7 @@ Pytest covers the root, health, and stats endpoints (`backend/health/tests/test_
 source venv/bin/activate
 export Gemini_API_Key=your_gemini_api_key
 export CHROMA_PATH=./test_chroma
-pytest backend/health/tests/ -v --tb=short
+python -m pytest backend/health/tests/test_api.py 
 ```
 
 ## CI

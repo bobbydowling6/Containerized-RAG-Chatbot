@@ -3,10 +3,11 @@ from pathlib import Path
 
 import chromadb
 import dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+import os
 
 env_path = Path(__file__).parent.parent / ".env"
 dotenv.load_dotenv(env_path)
@@ -35,7 +36,14 @@ client = db_client
 collection = client.get_or_create_collection(settings.COLLECTION_NAME)
 
 def load_documents_from_directory(directory: str):
-    """Load all text files from a directory and add them to ChromaDB"""
+    """
+    Load all text files from a directory and chunk them into ChromaDB.
+    
+    Chunking Strategy:
+      - Paragraph-based chunking split on double newlines ('\n\n').
+      - Each non-empty paragraph is treated as a discrete document chunk.
+      - Chunks are assigned metadata containing source file name and chunk index.
+    """
     docs_path = Path(directory)
     if not docs_path.exists():
         print(f"Warning: Docs directory not found: {directory}")
@@ -67,6 +75,76 @@ def load_documents_from_directory(directory: str):
             print(f"Error processing {file_path}: {e}")
     
     return document_count
+
+def query_rag_pipeline(question: str):
+    """Queries ChromaDB, filters chunks by CONFIDENCE_THRESHOLD, and generates answer via Gemini."""
+    results = collection.query(
+        query_texts=[question],
+        n_results=gemini.MAX_RESULTS
+    )
+    
+    sources = []
+    context = ""
+    valid_distances = []
+
+    if results and results.get("documents") and len(results["documents"]) > 0:
+        for i, doc in enumerate(results["documents"][0]):
+            if not doc:
+                continue
+                
+            distance = float(results["distances"][0][i]) if results.get("distances") else 999.0
+            metadata = results["metadatas"][0][i] if results.get("metadatas") else {}
+
+            # Requirement 3: Apply CONFIDENCE_THRESHOLD to retrieved distances
+            if distance <= settings.CONFIDENCE_THRESHOLD:
+                valid_distances.append(distance)
+                sources.append({
+                    "source": metadata.get("source", "Unknown"),
+                    "distance": distance,
+                    "text": doc[:100]
+                })
+                context += f"\n\n{doc}"
+
+    # Requirement 3: Return a no-context response if no chunk passes the threshold
+    if not sources or not context.strip():
+        return {
+            "question": question,
+            "answer": "I don't have information about that in the provided documents.",
+            "sources": [],
+            "confidence": "none"
+        }
+
+    # Requirement 4: Calculate confidence based on retrieval distance
+    best_distance = min(valid_distances)
+    if best_distance < 0.5:
+        confidence = "high"
+    elif best_distance < 0.9:
+        confidence = "medium"
+    else:
+        confidence = "low"
+
+    system_prompt = f"""You are a helpful assistant that answers questions based on provided documents. 
+Answer the question based ONLY on the context provided below. 
+If the answer is not in the context, say 'I don't have information about that in the provided documents.'
+
+Context from documents:
+{context}
+
+Question: {question}"""
+
+    response = gemini_client.models.generate_content(
+        model=MODEL,
+        contents=system_prompt
+    )
+        
+    answer = response.text if response else "No response from AI"
+    
+    return {
+        "question": question,
+        "answer": answer,
+        "sources": sources,
+        "confidence": confidence
+    }
 
 @app.get("/")
 def root():

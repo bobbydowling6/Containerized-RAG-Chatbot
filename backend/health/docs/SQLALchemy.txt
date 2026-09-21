@@ -1,0 +1,22 @@
+The Session Lifecycle
+Every database interaction goes through the session:
+Open a session
+Do things — create, query, modify, delete objects
+Commit — save all pending changes to the database
+Close the session (or use a with block that handles this automatically)
+If something goes wrong, you can rollback — undo everything since the last commit.
+with Session(engine) as session:
+    try:
+        # Operations here...
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+
+The CRUD Mapping
+Create → Make a Python object, session.add(), session.commit()
+Read → session.query(Model) with .all(), .first(), .filter_by(), or session.get(Model, id)
+Update → Change the object's attributes, session.commit() (SQLAlchemy detects the changes automatically)
+Delete → session.delete(object), session.commit()
+The elegance is in the Update: you don't write UPDATE statements. You change a Python attribute, and SQLAlchemy generates the SQL.
